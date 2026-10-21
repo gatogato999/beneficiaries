@@ -83,6 +83,12 @@ class OtherTab extends StatelessWidget {
                 onTap: () => sharePeople(List.of(store.people)),
               ),
               ListTile(
+                leading: const Icon(Icons.save_alt),
+                title: const Text('حفظ كل السجلات في الجهاز'),
+                enabled: !empty,
+                onTap: () => saveToDevice(List.of(store.people)),
+              ),
+              ListTile(
                 leading: const Icon(Icons.checklist),
                 title: const Text('مشاركة سجلات محددة'),
                 enabled: !empty,

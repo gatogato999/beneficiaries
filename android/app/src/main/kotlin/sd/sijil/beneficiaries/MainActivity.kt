@@ -11,6 +11,9 @@ class MainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
     private var pickResult: MethodChannel.Result? = null
     private val pickCode = 4242
+    private var saveResult: MethodChannel.Result? = null
+    private var saveText: String? = null
+    private val saveCode = 4243
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -38,6 +41,16 @@ class MainActivity : FlutterActivity() {
                         result.success(false)
                     }
                 }
+                "saveFile" -> {
+                    saveResult = result
+                    saveText = call.argument<String>("text")
+                    val i = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "application/octet-stream"
+                        putExtra(Intent.EXTRA_TITLE, call.argument<String>("name"))
+                    }
+                    startActivityForResult(i, saveCode)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -56,6 +69,26 @@ class MainActivity : FlutterActivity() {
             pickResult = null
             val uri = if (resultCode == Activity.RESULT_OK) data?.data else null
             r?.success(uri?.let { readUri(it) })
+            return
+        }
+        if (requestCode == saveCode) {
+            val r = saveResult
+            val text = saveText
+            saveResult = null
+            saveText = null
+            val uri = if (resultCode == Activity.RESULT_OK) data?.data else null
+            var ok = false
+            if (uri != null && text != null) {
+                ok = try {
+                    contentResolver.openOutputStream(uri, "wt")?.use {
+                        it.write(text.toByteArray(Charsets.UTF_8))
+                    }
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            r?.success(ok)
             return
         }
         super.onActivityResult(requestCode, resultCode, data)

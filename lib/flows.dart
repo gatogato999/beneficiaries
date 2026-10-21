@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'banks.dart';
 import 'common.dart';
 import 'models.dart';
+import 'native_files.dart';
 import 'store.dart';
 
 const kMime = 'application/x-sijil+json';
@@ -73,7 +74,7 @@ Future<void> runImport(String text) async {
   if (navKey.currentContext == null) return;
   final incoming = Store.parseExport(text);
   if (incoming == null) {
-    toast(navKey.currentContext!, 'الملف غير صالح');
+    toast(navKey.currentContext!, 'هذا ليس ملف سجل المستفيدين');
     return;
   }
   final r = await store.importPeople(incoming, askConflict);
@@ -87,4 +88,13 @@ Future<void> runImport(String text) async {
       actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('حسناً'))],
     ),
   );
+}
+
+Future<void> saveToDevice(List<Person> ps) async {
+  if (ps.isEmpty) return;
+  final stamp =
+      DateTime.now().toIso8601String().substring(0, 16).replaceAll(RegExp(r'[-:T]'), '');
+  final ok = await NativeFiles.saveText('sijil_$stamp.sijil', Store.exportJson(ps));
+  final c = navKey.currentContext;
+  if (c != null && c.mounted) toast(c, ok ? 'تم حفظ الملف' : 'لم يتم الحفظ');
 }

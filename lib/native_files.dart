@@ -14,6 +14,10 @@ class NativeFiles {
   static Future<bool> openUrl(String url) async =>
       (await _ch.invokeMethod<bool>('openUrl', url)) ?? false;
 
+  /// System "save as" dialog. True if the file was written.
+  static Future<bool> saveText(String name, String text) async =>
+      (await _ch.invokeMethod<bool>('saveFile', {'name': name, 'text': text})) ?? false;
+
   /// "open with" while the app is already running.
   static void listen(void Function(String text) onFile) {
     _ch.setMethodCallHandler((call) async {

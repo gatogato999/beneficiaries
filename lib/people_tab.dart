@@ -84,11 +84,13 @@ class _PeopleTabState extends State<PeopleTab> {
                 onSelected: (v) {
                   if (v == 'edit') _edit(p);
                   if (v == 'share') sharePeople([p]);
+                  if (v == 'save') saveToDevice([p]);
                   if (v == 'delete') _confirmDelete(p);
                 },
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('تعديل')),
                   PopupMenuItem(value: 'share', child: Text('مشاركة')),
+                  PopupMenuItem(value: 'save', child: Text('حفظ في الجهاز')),
                   PopupMenuItem(value: 'delete', child: Text('حذف')),
                 ],
               ),
