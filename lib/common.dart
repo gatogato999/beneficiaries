@@ -6,8 +6,8 @@ import 'store.dart';
 final navKey = GlobalKey<NavigatorState>();
 final store = Store();
 
-const kDevEmail = 'mohammadseedahmed+dev@gmail.com';
-const kDevPhone = '+249903380462';
+const kDevEmail = String.fromEnvironment('DEV_EMAIL');
+const kDevPhone = String.fromEnvironment('DEV_PHONE');
 
 Future<void> copyText(
   BuildContext c,

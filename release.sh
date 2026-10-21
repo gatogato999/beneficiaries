@@ -3,6 +3,8 @@
 #   keep  = release the version currently in pubspec.yaml (use for the first release)
 #   build = same version name, only +1 on the build number
 set -euo pipefail
+CONTACT=~/.config/sijil/contact.json
+[[ -f "$CONTACT" ]] || { echo "missing $CONTACT"; exit 1; }
 cd "$(dirname "$0")"
 [[ -z "$(git status --porcelain)" ]] || { echo "Commit or stash your changes first."; exit 1; }
 
@@ -22,12 +24,15 @@ git rev-parse "v$new" >/dev/null 2>&1 && { echo "Tag v$new already exists."; exi
 
 sed -i "s/^version:.*/version: $new/" pubspec.yaml
 flutter clean >/dev/null
-flutter build apk --release
-flutter build appbundle --release
+flutter build apk --release --split-per-abi --dart-define-from-file="$CONTACT"
+flutter build appbundle --release --dart-define-from-file="$CONTACT"
 
 out=~/releases/beneficiaries/$new
 mkdir -p "$out"
-cp build/app/outputs/flutter-apk/app-release.apk "$out/sijil-$new.apk"
+# cp build/app/outputs/flutter-apk/app-release.apk "$out/sijil-$new.apk"
+for abi in arm64-v8a armeabi-v7a; do
+  cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "$out/sijil-$new-$abi.apk"
+done
 cp build/app/outputs/bundle/release/app-release.aab "$out/sijil-$new.aab"
 (cd "$out" && sha256sum * > SHA256SUMS)
 
