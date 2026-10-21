@@ -119,10 +119,20 @@ class OtherTab extends StatelessWidget {
                 onTap: () => copyText(context, kDevEmail),
               ),
               ListTile(
-                leading: const Icon(Icons.phone_outlined),
+                leading: Image.asset('assets/whatsapp.png', width: 24, height: 24),
                 title: const Text(kDevPhone, textDirection: TextDirection.ltr),
-                trailing: const Icon(Icons.copy, size: 18),
-                onTap: () => copyText(context, kDevPhone),
+                subtitle: const Text('مراسلة عبر واتساب'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.copy, size: 18),
+                  onPressed: () => copyText(context, kDevPhone),
+                ),
+                onTap: () async {
+                  final num = kDevPhone.replaceAll(RegExp(r'\D'), '');
+                  final ok = await NativeFiles.openUrl('https://wa.me/$num');
+                  if (!ok && context.mounted) {
+                    copyText(context, kDevPhone, 'تعذّر فتح واتساب - تم نسخ الرقم');
+                  }
+                },
               ),
             ]),
           ),

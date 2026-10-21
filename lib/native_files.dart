@@ -10,6 +10,10 @@ class NativeFiles {
   /// System file picker; returns file text or null if cancelled.
   static Future<String?> pick() => _ch.invokeMethod<String>('pick');
 
+  /// Opens a link with the system (wa.me opens WhatsApp if installed). False on failure.
+  static Future<bool> openUrl(String url) async =>
+      (await _ch.invokeMethod<bool>('openUrl', url)) ?? false;
+
   /// "open with" while the app is already running.
   static void listen(void Function(String text) onFile) {
     _ch.setMethodCallHandler((call) async {

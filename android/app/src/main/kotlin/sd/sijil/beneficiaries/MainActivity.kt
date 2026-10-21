@@ -28,6 +28,16 @@ class MainActivity : FlutterActivity() {
                     }
                     startActivityForResult(i, pickCode)
                 }
+                "openUrl" -> {
+                    try {
+                        val i = Intent(Intent.ACTION_VIEW, Uri.parse(call.arguments as String))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(i)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
