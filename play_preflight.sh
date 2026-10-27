@@ -54,7 +54,7 @@ else
   echo "$B" | grep -E "^package:|^targetSdkVersion|^sdkVersion" | sed 's/^/         /'
   t=$(echo "$B" | sed -n "s/^targetSdkVersion:'\([0-9]*\)'.*/\1/p")
   [[ ${t:-0} -ge 36 ]] && ok "targetSdk $t (new apps must target 36+)" || bad "targetSdk ${t:-unknown} is below 36"
-  perms=$(echo "$B" | grep -E "^uses-permission" || true)
+  perms=$(echo "$B" | grep -E "^uses-permission" | grep -v DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION || true)
   [[ -z $perms ]] && ok "no permissions requested" || { warn "permissions requested (each needs a justification):"; echo "$perms" | sed 's/^/         /'; }
   echo "$B" | grep -q "application-debuggable" && bad "APK is debuggable" || ok "not debuggable"
   certs=$("$BT/apksigner" verify --print-certs "$APK" 2>&1)
