@@ -1,0 +1,37 @@
+{
+ "app": "sijil",
+ "version": 1,
+ "people": [
+  {
+   "name": "مستفيد تجريبي ١ (Test Person 1)",
+   "accounts": [
+    {
+     "bank": "bankak",
+     "number": "1234567"
+    },
+    {
+     "bank": "okash",
+     "number": "7654321"
+    }
+   ]
+  },
+  {
+   "name": "مستفيد تجريبي ٢ (Test Person 2)",
+   "accounts": [
+    {
+     "bank": "fawry",
+     "number": "12345678"
+    }
+   ]
+  },
+  {
+   "name": "مستفيد تجريبي ٣ (Test Person 3)",
+   "accounts": [
+    {
+     "bank": "masrafak",
+     "number": "12345678901"
+    }
+   ]
+  }
+ ]
+}

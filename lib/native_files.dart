@@ -18,6 +18,10 @@ class NativeFiles {
   static Future<bool> saveText(String name, String text) async =>
       (await _ch.invokeMethod<bool>('saveFile', {'name': name, 'text': text})) ?? false;
 
+  /// e.g. "1.1.0 (2)"; empty string when unavailable.
+  static Future<String> appVersion() async =>
+      (await _ch.invokeMethod<String>('appVersion')) ?? '';
+
   /// "open with" while the app is already running.
   static void listen(void Function(String text) onFile) {
     _ch.setMethodCallHandler((call) async {

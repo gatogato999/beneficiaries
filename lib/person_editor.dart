@@ -80,6 +80,7 @@ class _PersonEditorState extends State<PersonEditor> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
+                    tooltip: 'حذف الحساب',
                     onPressed: rows.length > 1 ? () => setState(() => rows.remove(r)) : null,
                   ),
                 ]),

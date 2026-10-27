@@ -4,6 +4,7 @@ import 'banks.dart';
 import 'common.dart';
 import 'flows.dart';
 import 'models.dart';
+import 'about_page.dart';
 import 'native_files.dart';
 
 class OtherTab extends StatelessWidget {
@@ -116,20 +117,31 @@ class OtherTab extends StatelessWidget {
             ]),
           ),
           Card(
+            child: ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('حول التطبيق والخصوصية والشروط'),
+              onTap: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => const AboutPage())),
+            ),
+          ),
+          Card(
             child: Column(children: [
               const ListTile(leading: Icon(Icons.support_agent), title: Text('تواصل مع المطوّر')),
-              ListTile(
+              if (kDevEmail.isNotEmpty)
+                ListTile(
                 leading: const Icon(Icons.email_outlined),
                 title: const Text(kDevEmail, textDirection: TextDirection.ltr),
                 trailing: const Icon(Icons.copy, size: 18),
                 onTap: () => copyText(context, kDevEmail),
               ),
-              ListTile(
-                leading: Image.asset('assets/whatsapp.png', width: 24, height: 24),
+              if (kDevPhone.isNotEmpty)
+                ListTile(
+                leading: const Icon(Icons.chat_outlined),
                 title: const Text(kDevPhone, textDirection: TextDirection.ltr),
                 subtitle: const Text('مراسلة عبر واتساب'),
                 trailing: IconButton(
                   icon: const Icon(Icons.copy, size: 18),
+                  tooltip: 'نسخ الرقم',
                   onPressed: () => copyText(context, kDevPhone),
                 ),
                 onTap: () async {
@@ -158,6 +170,7 @@ class PendingPage extends StatelessWidget {
         title: const Text('تعارضات معلّقة'),
         actions: [
           PopupMenuButton<Resolution>(
+            tooltip: 'خيارات',
             onSelected: store.resolveAllPending,
             itemBuilder: (_) => const [
               PopupMenuItem(value: Resolution.merge, child: Text('دمج الكل')),

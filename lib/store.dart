@@ -32,19 +32,24 @@ class Store extends ChangeNotifier {
 
   void _sort() => people.sort((a, b) => normName(a.name).compareTo(normName(b.name)));
 
-  Future<void> _save() async {
+  Future<void> _queue = Future.value();
+
+  /// Writes are queued so two quick saves can never interleave on the temp file.
+  Future<void> _save() {
     _sort();
-    final tmp = File('${_file.path}.tmp');
-    await tmp.writeAsString(
-      jsonEncode({
-        'version': 1,
-        'people': people.map((p) => p.toJson()).toList(),
-        'pending': pending.map((p) => p.toJson()).toList(),
-      }),
-      flush: true,
-    );
-    await tmp.rename(_file.path);
+    final data = jsonEncode({
+      'version': 1,
+      'people': people.map((p) => p.toJson()).toList(),
+      'pending': pending.map((p) => p.toJson()).toList(),
+    });
+    final job = _queue.then((_) async {
+      final tmp = File('${_file.path}.tmp');
+      await tmp.writeAsString(data, flush: true);
+      await tmp.rename(_file.path);
+    });
+    _queue = job.catchError((_) {});
     notifyListeners();
+    return job;
   }
 
   Person? byId(String id) {
@@ -76,12 +81,28 @@ class Store extends ChangeNotifier {
         'people': ps.map((p) => p.toJson(withId: false)).toList(),
       });
 
+  static const kMaxImport = 5000;
+
+  /// Clamp what comes from files made by other people (or other app versions).
+  static Person _sanitize(Person p) {
+    p.name = p.name.length > 120 ? p.name.substring(0, 120) : p.name;
+    p.accounts = p.accounts
+        .map((a) => Account(a.bankId.length > 40 ? '' : a.bankId, a.number.replaceAll(RegExp(r'\D'), '')))
+        .where((a) => a.bankId.isNotEmpty && a.number.isNotEmpty && a.number.length <= 20)
+        .take(50)
+        .toList();
+    return p;
+  }
+
   static List<Person>? parseExport(String text) {
     try {
       final j = jsonDecode(text) as Map<String, dynamic>;
       if (j['app'] != 'sijil') return null;
-      return (j['people'] as List)
+      final list = j['people'] as List;
+      if (list.length > kMaxImport) return null;
+      return list
           .map((e) => Person.fromJson(e as Map<String, dynamic>))
+          .map(_sanitize)
           .where((p) => p.name.isNotEmpty && p.accounts.isNotEmpty)
           .toList();
     } catch (_) {

@@ -9,6 +9,10 @@ final store = Store();
 const kDevEmail = String.fromEnvironment('DEV_EMAIL');
 const kDevPhone = String.fromEnvironment('DEV_PHONE');
 
+// Public pages (GitHub Pages of the releases repo). Change them if you host elsewhere.
+const kPrivacyUrl = 'https://gatogato999.github.io/beneficiaries/privacy/';
+const kTermsUrl = 'https://gatogato999.github.io/beneficiaries/terms/';
+
 Future<void> copyText(
   BuildContext c,
   String t, [

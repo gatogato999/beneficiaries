@@ -1,0 +1,19 @@
+{
+ "app": "sijil",
+ "version": 1,
+ "people": [
+  {
+   "name": "مستفيد تجريبي ١ (Test Person 1)",
+   "accounts": [
+    {
+     "bank": "bankak",
+     "number": "1234567"
+    },
+    {
+     "bank": "salam",
+     "number": "123456"
+    }
+   ]
+  }
+ ]
+}

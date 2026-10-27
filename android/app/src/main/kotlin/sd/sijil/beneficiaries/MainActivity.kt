@@ -51,6 +51,9 @@ class MainActivity : FlutterActivity() {
                     }
                     startActivityForResult(i, saveCode)
                 }
+                "appVersion" -> {
+                    result.success(try { versionString() } catch (e: Exception) { "" })
+                }
                 else -> result.notImplemented()
             }
         }
@@ -103,10 +106,27 @@ class MainActivity : FlutterActivity() {
         return readUri(uri)
     }
 
+    @Suppress("DEPRECATION")
+    private fun versionString(): String {
+        val pi = packageManager.getPackageInfo(packageName, 0)
+        val code = if (android.os.Build.VERSION.SDK_INT >= 28) pi.longVersionCode else pi.versionCode.toLong()
+        return "${pi.versionName} ($code)"
+    }
+
     private fun readUri(uri: Uri): String? = try {
         contentResolver.openInputStream(uri)?.use { s ->
-            val bytes = s.readBytes()
-            if (bytes.size > 5_000_000) null else String(bytes, Charsets.UTF_8)
+            // stop reading at 5 MB instead of loading a huge file into memory first
+            val out = java.io.ByteArrayOutputStream()
+            val buf = ByteArray(16 * 1024)
+            var total = 0
+            while (true) {
+                val n = s.read(buf)
+                if (n < 0) break
+                total += n
+                if (total > 5_000_000) return@use null
+                out.write(buf, 0, n)
+            }
+            String(out.toByteArray(), Charsets.UTF_8)
         }
     } catch (e: Exception) {
         null

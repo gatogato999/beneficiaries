@@ -1,8 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="سجل المستفيدين"
+        android:label="@string/app_name"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -20,37 +22,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Open exported files: our own MIME type (set by the share sheet) -->
+            <!-- Files exported by this app (.sijil). Apps like WhatsApp send them as octet-stream. content:// only. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="content" />
-                <data android:scheme="file" />
                 <data android:mimeType="application/x-sijil+json" />
+                <data android:mimeType="application/x-sijil" />
+                <data android:mimeType="application/octet-stream" />
             </intent-filter>
 
-            <!-- Fallback: apps (WhatsApp, file managers) that send it as octet-stream / unknown, matched by *.sijil -->
+            <!-- Fallback for any other type: the file name must end with .sijil -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="content" />
-                <data android:scheme="file" />
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.sijil" />
                 <data android:pathPattern=".*\\..*\\.sijil" />
                 <data android:pathPattern=".*\\..*\\..*\\.sijil" />
-            </intent-filter>
-            <!-- WhatsApp and others send unknown files as octet-stream (no extension in the URI) -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="content" />
-                <data android:mimeType="application/octet-stream" />
-                <data android:mimeType="application/x-sijil" />
             </intent-filter>
         </activity>
         <meta-data android:name="flutterEmbedding" android:value="2" />

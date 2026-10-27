@@ -62,7 +62,7 @@ class _ConverterTabState extends State<ConverterTab> {
               const SizedBox(height: 4),
               Text(bank.pattern,
                   textDirection: TextDirection.ltr,
-                  style: TextStyle(color: cs.onPrimaryContainer.withValues(alpha: .6))),
+                  style: TextStyle(color: cs.onPrimaryContainer.withValues(alpha: .85))),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () => copyText(context, bban),

@@ -15,6 +15,14 @@ const kMime = 'application/x-sijil+json';
 Future<void> sharePeople(List<Person> ps) async {
   if (ps.isEmpty) return;
   final dir = await getTemporaryDirectory();
+  for (final e in dir.listSync()) {
+    // do not leave old exports (they contain personal data) lying in the cache
+    if (e is File && e.path.endsWith('.sijil')) {
+      try {
+        e.deleteSync();
+      } catch (_) {}
+    }
+  }
   final stamp =
       DateTime.now().toIso8601String().substring(0, 16).replaceAll(RegExp(r'[-:T]'), '');
   final f = File('${dir.path}/sijil_$stamp.sijil');
@@ -77,7 +85,15 @@ Future<void> runImport(String text) async {
     toast(navKey.currentContext!, 'هذا ليس ملف سجل المستفيدين');
     return;
   }
-  final r = await store.importPeople(incoming, askConflict);
+  ImportReport r;
+  try {
+    r = await store.importPeople(incoming, askConflict);
+  } catch (_) {
+    if (navKey.currentContext != null) {
+      toast(navKey.currentContext!, 'تعذّر الاستيراد، حاول مرة أخرى');
+    }
+    return;
+  }
   if (navKey.currentContext == null) return;
   await showDialog<void>(
     context: navKey.currentContext!,

@@ -81,6 +81,7 @@ class _PeopleTabState extends State<PeopleTab> {
                           .titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold))),
               PopupMenuButton<String>(
+                tooltip: 'خيارات',
                 onSelected: (v) {
                   if (v == 'edit') _edit(p);
                   if (v == 'share') sharePeople([p]);
