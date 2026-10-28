@@ -15,7 +15,7 @@ An independent helper app for Android: turn a bank or wallet account number into
 
 ## Support / الدعم
 
-Email: mohammadseedahmed+dev@gmail.com — questions, bug reports and feature ideas are welcome. When you report a problem please include your app version (About screen) and your Android version.
+Email: mohammadseedahmed+dev@gmail.com - questions, bug reports and feature ideas are welcome. When you report a problem please include your app version (About screen) and your Android version.
 
 - [Privacy Policy](privacy/) · [Terms of Use](terms/)
 
@@ -50,7 +50,7 @@ No. Records stay on your device. Files you share leave the phone only because yo
 
 ### الدعم
 
-البريد: mohammadseedahmed+dev@gmail.com — نرحّب بالأسئلة وبلاغات الأخطاء والاقتراحات. عند الإبلاغ عن مشكلة اذكر إصدار التطبيق (من شاشة «حول التطبيق») وإصدار أندرويد.
+البريد: mohammadseedahmed+dev@gmail.com - نرحّب بالأسئلة وبلاغات الأخطاء والاقتراحات. عند الإبلاغ عن مشكلة اذكر إصدار التطبيق (من شاشة «حول التطبيق») وإصدار أندرويد.
 
 ### أسئلة شائعة
 

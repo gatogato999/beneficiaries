@@ -1,0 +1,36 @@
+name: Bug report
+description: Something does not work or a bank format is wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping. Please do **not** paste real account numbers or people's names.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Other tab, About screen (for example 1.1.1 (3))
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: Phone model and Android version
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: input
+    id: bank
+    attributes:
+      label: Bank or wallet involved (if a BBAN looks wrong)
+      description: Say how many digits the account has. Do not write the number itself.
