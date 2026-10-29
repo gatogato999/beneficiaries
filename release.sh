@@ -39,3 +39,7 @@ cp build/app/outputs/bundle/release/app-release.aab "$out/sijil-$new.aab"
 git diff --quiet || git commit -am "Release v$new"
 git tag -a "v$new" -m "Release $new"
 echo "Built $new -> $out"
+
+git push && git push origin "v$new"
+gh release create "v$new" "$out"/sijil-"$new"-*.apk "$out/SHA256SUMS" \
+  --title "My Beneficiaries $new" --notes "${RELEASE_NOTES:-Release $new}"
