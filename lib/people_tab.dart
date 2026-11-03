@@ -15,6 +15,22 @@ class PeopleTab extends StatefulWidget {
 class _PeopleTabState extends State<PeopleTab> {
   String q = '';
 
+  // Cards are collapsed by default. While a search is active they start expanded
+  // (so a match by account number shows the account). `_flipped` holds the people
+  // whose state was reversed by tapping the toggle.
+  final Set<String> _flipped = {};
+
+  bool _isOpen(Person p) => _flipped.contains(p.id);
+  void _toggle(Person p) => setState(() {
+        if (!_flipped.remove(p.id)) _flipped.add(p.id);
+      });
+
+  String _count(int n) {
+    if (n == 1) return 'حساب واحد';
+    if (n == 2) return 'حسابان';
+    return n <= 10 ? '$n حسابات' : '$n حساباً';
+  }
+
   bool _match(Person p) {
     if (q.trim().isEmpty) return true;
     final n = normName(q);
@@ -68,34 +84,52 @@ class _PeopleTabState extends State<PeopleTab> {
     ];
   }
 
-  Widget _card(Person p) => Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 4, 12),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(
-                  child: Text(p.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold))),
-              PopupMenuButton<String>(
-                tooltip: 'خيارات',
-                onSelected: (v) {
-                  if (v == 'edit') _edit(p);
-                  if (v == 'share') sharePeople([p]);
-                  if (v == 'save') saveToDevice([p]);
-                  if (v == 'delete') _confirmDelete(p);
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('تعديل')),
-                  PopupMenuItem(value: 'share', child: Text('مشاركة')),
-                  PopupMenuItem(value: 'save', child: Text('حفظ في الجهاز')),
-                  PopupMenuItem(value: 'delete', child: Text('حذف')),
-                ],
+  Widget _card(Person p) {
+    final open = _isOpen(p);
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 4, 4, open ? 12 : 4),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => _toggle(p),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(p.name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(_count(p.accounts.length), style: Theme.of(context).textTheme.bodySmall),
+                  ]),
+                ),
               ),
-            ]),
+            ),
+            IconButton(
+              tooltip: open ? 'إخفاء الحسابات' : 'عرض الحسابات',
+              icon: Icon(open ? Icons.expand_less : Icons.expand_more),
+              onPressed: () => _toggle(p),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'خيارات',
+              onSelected: (v) {
+                if (v == 'edit') _edit(p);
+                if (v == 'share') sharePeople([p]);
+                if (v == 'save') saveToDevice([p]);
+                if (v == 'delete') _confirmDelete(p);
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('تعديل')),
+                PopupMenuItem(value: 'share', child: Text('مشاركة')),
+                PopupMenuItem(value: 'save', child: Text('حفظ في الجهاز')),
+                PopupMenuItem(value: 'delete', child: Text('حذف')),
+              ],
+            ),
+          ]),
+          if (open)
             Padding(
               padding: const EdgeInsets.only(right: 0, left: 12),
               child: Column(
@@ -103,9 +137,10 @@ class _PeopleTabState extends State<PeopleTab> {
                 children: [for (final a in p.accounts) ..._account(p, a)],
               ),
             ),
-          ]),
-        ),
-      );
+        ]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +149,10 @@ class _PeopleTabState extends State<PeopleTab> {
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(
-            onChanged: (v) => setState(() => q = v),
+            onChanged: (v) => setState(() {
+              q = v;
+              _flipped.clear();
+            }),
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
               hintText: 'بحث بالاسم أو رقم الحساب أو البنك',
