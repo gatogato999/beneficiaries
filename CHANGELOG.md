@@ -2,6 +2,7 @@
 Format: [version+build] - date. Keep one entry per release; the build number always increases.
 
 ## [Unreleased]
+- Added: dark mode that follows the phone's setting.
 - Changed: beneficiary cards are collapsed by default; a toggle button shows their accounts.
 - Added: WhatsApp link for contacting the developer; save-to-device; "open with" support for files sent through WhatsApp; contact details read from a build-time config; per-ABI APKs.
 - Added (Play readiness): About screen (version, privacy policy, terms, open-source licences), import size/field limits, serialised saves, cleanup of temporary export files, accessibility tooltips, cleaner manifest, localized app label.

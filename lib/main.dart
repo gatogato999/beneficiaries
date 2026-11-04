@@ -13,6 +13,13 @@ Future<void> main() async {
   runApp(const App());
 }
 
+/// One colour scheme for both modes, generated from the app's red.
+ThemeData _theme(Brightness brightness) => ThemeData(
+      colorSchemeSeed: const Color(0xFFC62828),
+      brightness: brightness,
+      useMaterial3: true,
+    );
+
 class App extends StatefulWidget {
   const App({super.key});
   @override
@@ -35,7 +42,9 @@ class _AppState extends State<App> {
         navigatorKey: navKey,
         title: 'سجل المستفيدين',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(colorSchemeSeed: const Color(0xFFC62828), useMaterial3: true),
+        theme: _theme(Brightness.light),
+        darkTheme: _theme(Brightness.dark),
+        themeMode: ThemeMode.system,
         builder: (c, w) => Directionality(textDirection: TextDirection.rtl, child: w!),
         home: const Home(),
       );
