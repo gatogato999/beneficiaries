@@ -3,6 +3,8 @@
 #   keep  = release the version currently in pubspec.yaml (use for the first release)
 #   build = same version name, only +1 on the build number
 set -euo pipefail
+trap 'rc=$?; printf "\nERROR: release.sh failed at line %s: %s (exit %s)\n" \
+  "$LINENO" "$BASH_COMMAND" "$rc" >&2' ERR
 CONTACT=~/.config/sijil/contact.json
 [[ -f "$CONTACT" ]] || { echo "missing $CONTACT"; exit 1; }
 cd "$(dirname "$0")"
