@@ -55,7 +55,16 @@ class _PeopleTabState extends State<PeopleTab> {
         ],
       ),
     );
-    if (ok == true) await store.delete(p.id);
+    if (ok != true) return;
+    await store.delete(p.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('تم حذف ${p.name}'),
+        duration: const Duration(seconds: 6),
+        action: SnackBarAction(label: 'تراجع', onPressed: () => store.restore(p)),
+      ));
   }
 
   List<Widget> _account(Person p, Account a) {

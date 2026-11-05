@@ -2,6 +2,7 @@
 Format: [version+build] - date. Keep one entry per release; the build number always increases.
 
 ## [Unreleased]
+- Added: "undo" after deleting a beneficiary.
 - Added: dark mode that follows the phone's setting.
 - Changed: beneficiary cards are collapsed by default; a toggle button shows their accounts.
 - Added: WhatsApp link for contacting the developer; save-to-device; "open with" support for files sent through WhatsApp; contact details read from a build-time config; per-ABI APKs.

@@ -15,8 +15,12 @@ class Store extends ChangeNotifier {
   final List<Pending> pending = [];
   late File _file;
 
+  /// Folder that holds data.json. Null in the app (the documents folder is used); tests pass a temp folder.
+  final Directory? _dir;
+  Store([this._dir]);
+
   Future<void> load() async {
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = _dir ?? await getApplicationDocumentsDirectory();
     _file = File('${dir.path}/data.json');
     if (await _file.exists()) {
       try {
@@ -72,6 +76,12 @@ class Store extends ChangeNotifier {
   Future<void> delete(String id) async {
     people.removeWhere((p) => p.id == id);
     await _save();
+  }
+
+  /// Puts a deleted record back with its old id (used by "undo"). Does nothing if it is already there.
+  Future<void> restore(Person p) async {
+    if (byId(p.id) != null) return;
+    await upsert(p);
   }
 
   // ---------- export / import file format ----------
