@@ -2,6 +2,7 @@
 Format: [version+build] - date. Keep one entry per release; the build number always increases.
 
 ## [Unreleased]
+- Added: pin the beneficiaries you use most so they stay at the top (personal, not shared in exports).
 - Added: the converter remembers the last bank; a paste button next to the account number.
 - Changed: account numbers typed or pasted in Arabic-Indic digits are accepted; data.json now has a schema version (older files are backed up before migrating).
 - Added: "undo" after deleting a beneficiary.

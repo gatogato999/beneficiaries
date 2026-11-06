@@ -20,10 +20,15 @@ class Account {
 class Person {
   String id, name;
   List<Account> accounts;
-  Person(this.id, this.name, this.accounts);
 
-  Map<String, dynamic> toJson({bool withId = true}) => {
-        if (withId) 'id': id,
+  /// Personal flag: kept on this phone only, never part of an exported file.
+  bool pinned;
+  Person(this.id, this.name, this.accounts, {this.pinned = false});
+
+  /// `shared: true` is the form that goes into export files: no id and no personal flags.
+  Map<String, dynamic> toJson({bool shared = false}) => {
+        if (!shared) 'id': id,
+        if (!shared && pinned) 'pinned': true,
         'name': name,
         'accounts': accounts.map((a) => a.toJson()).toList(),
       };
@@ -34,6 +39,7 @@ class Person {
         ((j['accounts'] ?? []) as List)
             .map((e) => Account.fromJson(e as Map<String, dynamic>))
             .toList(),
+        pinned: j['pinned'] == true,
       );
 }
 

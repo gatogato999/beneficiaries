@@ -115,11 +115,19 @@ class Store extends ChangeNotifier {
     await upsert(p);
   }
 
+  /// Pins or unpins a record. Pins are personal: they are not exported or imported.
+  Future<void> togglePin(String id) {
+    final p = byId(id);
+    if (p == null) return Future.value();
+    p.pinned = !p.pinned;
+    return _save();
+  }
+
   // ---------- export / import file format ----------
   static String exportJson(List<Person> ps) => jsonEncode({
         'app': 'sijil',
         'version': 1,
-        'people': ps.map((p) => p.toJson(withId: false)).toList(),
+        'people': ps.map((p) => p.toJson(shared: true)).toList(),
       });
 
   static const kMaxImport = 5000;
@@ -127,6 +135,7 @@ class Store extends ChangeNotifier {
   /// Clamp what comes from files made by other people (or other app versions).
   static Person _sanitize(Person p) {
     p.name = p.name.length > 120 ? p.name.substring(0, 120) : p.name;
+    p.pinned = false; // a file made by someone else never pins anything here
     p.accounts = p.accounts
         .map((a) => Account(a.bankId.length > 40 ? '' : a.bankId, a.number.replaceAll(RegExp(r'\D'), '')))
         .where((a) => a.bankId.isNotEmpty && a.number.isNotEmpty && a.number.length <= 20)

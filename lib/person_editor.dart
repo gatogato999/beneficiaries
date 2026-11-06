@@ -43,7 +43,7 @@ class _PersonEditorState extends State<PersonEditor> {
       accs.add(Account(r.bankId, t));
     }
     if (accs.isEmpty) return toast(context, 'أضف حساباً واحداً على الأقل');
-    await store.upsert(Person(widget.person?.id ?? newId(), n, accs));
+    await store.upsert(Person(widget.person?.id ?? newId(), n, accs, pinned: widget.person?.pinned ?? false));
     if (mounted) Navigator.pop(context);
   }
 

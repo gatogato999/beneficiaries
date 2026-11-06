@@ -4,6 +4,7 @@ import 'banks.dart';
 import 'common.dart';
 import 'flows.dart';
 import 'models.dart';
+import 'people_order.dart';
 import 'person_editor.dart';
 
 class PeopleTab extends StatefulWidget {
@@ -118,6 +119,12 @@ class _PeopleTabState extends State<PeopleTab> {
               ),
             ),
             IconButton(
+              tooltip: p.pinned ? 'إلغاء التثبيت' : 'تثبيت في الأعلى',
+              icon: Icon(p.pinned ? Icons.push_pin : Icons.push_pin_outlined),
+              color: p.pinned ? Theme.of(context).colorScheme.primary : null,
+              onPressed: () => store.togglePin(p.id),
+            ),
+            IconButton(
               tooltip: open ? 'إخفاء الحسابات' : 'عرض الحسابات',
               icon: Icon(open ? Icons.expand_less : Icons.expand_more),
               onPressed: () => _toggle(p),
@@ -174,7 +181,7 @@ class _PeopleTabState extends State<PeopleTab> {
           child: ListenableBuilder(
             listenable: store,
             builder: (context, _) {
-              final list = store.people.where(_match).toList();
+              final list = orderPeople(store.people.where(_match));
               if (list.isEmpty) {
                 return Center(child: Text(store.people.isEmpty ? 'لا يوجد مستفيدون بعد' : 'لا نتائج'));
               }
