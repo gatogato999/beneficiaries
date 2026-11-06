@@ -2,6 +2,8 @@
 Format: [version+build] - date. Keep one entry per release; the build number always increases.
 
 ## [Unreleased]
+- Added: the converter remembers the last bank; a paste button next to the account number.
+- Changed: account numbers typed or pasted in Arabic-Indic digits are accepted; data.json now has a schema version (older files are backed up before migrating).
 - Added: "undo" after deleting a beneficiary.
 - Added: dark mode that follows the phone's setting.
 - Changed: beneficiary cards are collapsed by default; a toggle button shows their accounts.

@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import 'banks.dart';
 import 'common.dart';
+import 'digits.dart';
+import 'digits_input.dart';
 
 class ConverterTab extends StatefulWidget {
   const ConverterTab({super.key});
@@ -11,13 +13,28 @@ class ConverterTab extends StatefulWidget {
 }
 
 class _ConverterTabState extends State<ConverterTab> {
-  Bank bank = banks.first;
+  late Bank bank = bankById(store.lastBank ?? '') ?? banks.first;
   final ctrl = TextEditingController();
 
   @override
   void dispose() {
     ctrl.dispose();
     super.dispose();
+  }
+
+  /// Reads the clipboard only when the button is tapped.
+  Future<void> _paste() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final number = extractAccountNumber(data?.text ?? '');
+    if (!mounted) return;
+    if (number == null) {
+      toast(context, 'لا يوجد رقم حساب في الحافظة');
+      return;
+    }
+    setState(() {
+      ctrl.text = number;
+      ctrl.selection = TextSelection.collapsed(offset: number.length);
+    });
   }
 
   @override
@@ -31,18 +48,26 @@ class _ConverterTabState extends State<ConverterTab> {
         expandedInsets: EdgeInsets.zero,
         label: const Text('البنك / المحفظة'),
         dropdownMenuEntries: [for (final b in banks) DropdownMenuEntry(value: b, label: b.label)],
-        onSelected: (b) => setState(() => bank = b ?? bank),
+        onSelected: (b) {
+          setState(() => bank = b ?? bank);
+          store.setLastBank(bank.id);
+        },
       ),
       const SizedBox(height: 16),
       TextField(
         controller: ctrl,
         keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        inputFormatters: [AsciiDigitsFormatter()],
         textDirection: TextDirection.ltr,
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
           labelText: 'رقم الحساب',
           helperText: 'عادةً 7 أرقام',
+          suffixIcon: IconButton(
+            tooltip: 'لصق من الحافظة',
+            icon: const Icon(Icons.content_paste),
+            onPressed: _paste,
+          ),
           errorText: tooLong ? 'الرقم أطول من المتوقع (الحد الأقصى ${bank.width} أرقام)' : null,
         ),
         onChanged: (_) => setState(() {}),

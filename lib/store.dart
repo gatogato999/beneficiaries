@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'models.dart';
+import 'schema.dart';
 
 class ImportReport {
   int added = 0, merged = 0, separate = 0, skipped = 0, later = 0;
@@ -13,6 +14,17 @@ class ImportReport {
 class Store extends ChangeNotifier {
   final List<Person> people = [];
   final List<Pending> pending = [];
+
+  /// Small settings kept in data.json (for example the last bank chosen in the converter).
+  final Map<String, dynamic> prefs = {};
+
+  String? get lastBank => prefs['lastBank'] as String?;
+
+  Future<void> setLastBank(String id) {
+    if (lastBank == id) return Future.value();
+    prefs['lastBank'] = id;
+    return _save();
+  }
   late File _file;
 
   /// Folder that holds data.json. Null in the app (the documents folder is used); tests pass a temp folder.
@@ -24,14 +36,32 @@ class Store extends ChangeNotifier {
     _file = File('${dir.path}/data.json');
     if (await _file.exists()) {
       try {
-        final j = jsonDecode(await _file.readAsString()) as Map<String, dynamic>;
-        people.addAll((j['people'] as List).map((e) => Person.fromJson(e)));
-        pending.addAll(((j['pending'] ?? []) as List).map((e) => Pending.fromJson(e)));
+        var j = jsonDecode(await _file.readAsString()) as Map<String, dynamic>;
+        final from = schemaVersionOf(j);
+        if (from != kSchemaVersion) {
+          // Keep the file as it was before its layout is touched: older files before the migration,
+          // newer ones (made by a newer app) before this version overwrites them.
+          await _backup(from < kSchemaVersion ? 'premigrate.bak' : 'newer.bak');
+        }
+        j = migrate(j);
+        final loadedPeople = (j['people'] as List).map((e) => Person.fromJson(e)).toList();
+        final loadedPending = ((j['pending'] ?? []) as List).map((e) => Pending.fromJson(e)).toList();
+        final p = j['prefs'];
+        people.addAll(loadedPeople);
+        pending.addAll(loadedPending);
+        if (p is Map) prefs.addAll(p.cast<String, dynamic>());
       } catch (_) {
-        await _file.copy('${_file.path}.bak'); // keep the unreadable file
+        await _backup('bak'); // keep the unreadable file
       }
     }
     _sort();
+  }
+
+  /// Copies data.json next to itself; a failing backup must never stop the app from starting.
+  Future<void> _backup(String suffix) async {
+    try {
+      await _file.copy('${_file.path}.$suffix');
+    } catch (_) {}
   }
 
   void _sort() => people.sort((a, b) => normName(a.name).compareTo(normName(b.name)));
@@ -42,9 +72,10 @@ class Store extends ChangeNotifier {
   Future<void> _save() {
     _sort();
     final data = jsonEncode({
-      'version': 1,
+      'version': kSchemaVersion,
       'people': people.map((p) => p.toJson()).toList(),
       'pending': pending.map((p) => p.toJson()).toList(),
+      'prefs': prefs,
     });
     final job = _queue.then((_) async {
       final tmp = File('${_file.path}.tmp');

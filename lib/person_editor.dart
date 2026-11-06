@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'banks.dart';
 import 'common.dart';
+import 'digits_input.dart';
 import 'models.dart';
 
 class _Row {
@@ -88,7 +88,7 @@ class _PersonEditorState extends State<PersonEditor> {
                 TextField(
                   controller: r.num,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [AsciiDigitsFormatter()],
                   textDirection: TextDirection.ltr,
                   decoration:
                       const InputDecoration(border: OutlineInputBorder(), labelText: 'رقم الحساب'),
