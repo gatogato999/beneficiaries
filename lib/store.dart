@@ -18,6 +18,17 @@ class Store extends ChangeNotifier {
   /// Small settings kept in data.json (for example the last bank chosen in the converter).
   final Map<String, dynamic> prefs = {};
 
+  /// Increases on every change that listeners are told about (not on silent usage counting).
+  int revision = 0;
+
+  String? get sortModeName => prefs['sortMode'] as String?;
+
+  Future<void> setSortMode(String name) {
+    if (sortModeName == name) return Future.value();
+    prefs['sortMode'] = name;
+    return _save();
+  }
+
   String? get lastBank => prefs['lastBank'] as String?;
 
   Future<void> setLastBank(String id) {
@@ -69,7 +80,7 @@ class Store extends ChangeNotifier {
   Future<void> _queue = Future.value();
 
   /// Writes are queued so two quick saves can never interleave on the temp file.
-  Future<void> _save() {
+  Future<void> _save({bool notify = true}) {
     _sort();
     final data = jsonEncode({
       'version': kSchemaVersion,
@@ -83,7 +94,10 @@ class Store extends ChangeNotifier {
       await tmp.rename(_file.path);
     });
     _queue = job.catchError((_) {});
-    notifyListeners();
+    if (notify) {
+      revision++;
+      notifyListeners();
+    }
     return job;
   }
 
@@ -123,6 +137,17 @@ class Store extends ChangeNotifier {
     return _save();
   }
 
+  /// Counts a copy of one of the record's numbers (used by the "recent" and "most used" sorting).
+  /// Personal data: not exported. It saves without notifying listeners, so the list
+  /// does not re-sort while you are still copying.
+  Future<void> recordUse(String id, {DateTime? now}) {
+    final p = byId(id);
+    if (p == null) return Future.value();
+    p.useCount++;
+    p.lastUsed = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    return _save(notify: false);
+  }
+
   // ---------- export / import file format ----------
   static String exportJson(List<Person> ps) => jsonEncode({
         'app': 'sijil',
@@ -136,6 +161,8 @@ class Store extends ChangeNotifier {
   static Person _sanitize(Person p) {
     p.name = p.name.length > 120 ? p.name.substring(0, 120) : p.name;
     p.pinned = false; // a file made by someone else never pins anything here
+    p.useCount = 0;
+    p.lastUsed = 0;
     p.accounts = p.accounts
         .map((a) => Account(a.bankId.length > 40 ? '' : a.bankId, a.number.replaceAll(RegExp(r'\D'), '')))
         .where((a) => a.bankId.isNotEmpty && a.number.isNotEmpty && a.number.length <= 20)

@@ -17,18 +17,38 @@ class Account {
       Account('${j['bank'] ?? ''}', '${j['number'] ?? ''}');
 }
 
+int _nonNegativeInt(Object? v) {
+  final n = v is num ? v.toInt() : 0;
+  return n < 0 ? 0 : n;
+}
+
 class Person {
   String id, name;
   List<Account> accounts;
 
-  /// Personal flag: kept on this phone only, never part of an exported file.
+  /// Personal data: kept on this phone only, never part of an exported file.
   bool pinned;
-  Person(this.id, this.name, this.accounts, {this.pinned = false});
+  int useCount; // how many times a number of this record was copied
+  int lastUsed; // milliseconds since the epoch of the last copy, 0 = never
+
+  Person(this.id, this.name, this.accounts, {this.pinned = false, this.useCount = 0, this.lastUsed = 0});
+
+  /// A changed copy that keeps the id and the personal fields (pin, usage).
+  Person copyWith({String? name, List<Account>? accounts}) => Person(
+        id,
+        name ?? this.name,
+        accounts ?? this.accounts,
+        pinned: pinned,
+        useCount: useCount,
+        lastUsed: lastUsed,
+      );
 
   /// `shared: true` is the form that goes into export files: no id and no personal flags.
   Map<String, dynamic> toJson({bool shared = false}) => {
         if (!shared) 'id': id,
         if (!shared && pinned) 'pinned': true,
+        if (!shared && useCount > 0) 'uses': useCount,
+        if (!shared && lastUsed > 0) 'lastUsed': lastUsed,
         'name': name,
         'accounts': accounts.map((a) => a.toJson()).toList(),
       };
@@ -40,6 +60,8 @@ class Person {
             .map((e) => Account.fromJson(e as Map<String, dynamic>))
             .toList(),
         pinned: j['pinned'] == true,
+        useCount: _nonNegativeInt(j['uses']),
+        lastUsed: _nonNegativeInt(j['lastUsed']),
       );
 }
 

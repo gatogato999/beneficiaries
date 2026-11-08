@@ -4,8 +4,9 @@ import 'banks.dart';
 import 'common.dart';
 import 'flows.dart';
 import 'models.dart';
-import 'people_order.dart';
+import 'people_filter.dart';
 import 'person_editor.dart';
+import 'sorting.dart';
 
 class PeopleTab extends StatefulWidget {
   const PeopleTab({super.key});
@@ -15,6 +16,15 @@ class PeopleTab extends StatefulWidget {
 
 class _PeopleTabState extends State<PeopleTab> {
   String q = '';
+
+  SortMode _sort = sortModeFromName(store.sortModeName);
+  String? _bankFilter;
+
+  // Sorting by use works from a snapshot that is refreshed only when the data really changes
+  // (add, edit, delete, pin, import, sort choice). Copying a number counts a use silently,
+  // so cards do not jump around while you work with them.
+  Map<String, Usage> _usage = {};
+  int _seenRevision = -1;
 
   // Cards are collapsed by default. While a search is active they start expanded
   // (so a match by account number shows the account). `_flipped` holds the people
@@ -32,15 +42,13 @@ class _PeopleTabState extends State<PeopleTab> {
     return n <= 10 ? '$n حسابات' : '$n حساباً';
   }
 
-  bool _match(Person p) {
-    if (q.trim().isEmpty) return true;
-    final n = normName(q);
-    final digits = q.replaceAll(RegExp(r'\D'), '');
-    if (normName(p.name).contains(n)) return true;
-    return p.accounts.any((a) =>
-        (digits.isNotEmpty && a.number.contains(digits)) ||
-        normName(bankById(a.bankId)?.label ?? '').contains(n));
-  }
+  bool _match(Person p) => personMatches(p, q) && hasBank(p, _bankFilter);
+
+  String _sortLabel(SortMode m) => switch (m) {
+        SortMode.alphabetical => 'الاسم',
+        SortMode.recent => 'الأحدث استخداماً',
+        SortMode.mostUsed => 'الأكثر استخداماً',
+      };
 
   void _edit([Person? p]) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => PersonEditor(person: p)));
@@ -81,12 +89,20 @@ class _PeopleTabState extends State<PeopleTab> {
       const SizedBox(height: 6),
       Wrap(spacing: 8, children: [
         FilledButton.tonalIcon(
-          onPressed: () => copyText(context, a.number),
+          onPressed: () {
+            copyText(context, a.number);
+            store.recordUse(p.id);
+          },
           icon: const Icon(Icons.copy, size: 18),
           label: const Text('نسخ'),
         ),
         FilledButton.tonalIcon(
-          onPressed: bban == null ? null : () => copyText(context, bban, 'تم نسخ BBAN'),
+          onPressed: bban == null
+              ? null
+              : () {
+                  copyText(context, bban, 'تم نسخ BBAN');
+                  store.recordUse(p.id);
+                },
           icon: const Icon(Icons.copy_all, size: 18),
           label: const Text('نسخ bban'),
         ),
@@ -177,13 +193,66 @@ class _PeopleTabState extends State<PeopleTab> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+          child: Wrap(spacing: 8, children: [
+            PopupMenuButton<SortMode>(
+              tooltip: 'ترتيب القائمة',
+              onSelected: (m) {
+                setState(() {
+                  _sort = m;
+                  _seenRevision = -1;
+                });
+                store.setSortMode(m.name);
+              },
+              itemBuilder: (_) => [
+                for (final m in SortMode.values) PopupMenuItem(value: m, child: Text(_sortLabel(m))),
+              ],
+              child: Chip(
+                avatar: const Icon(Icons.sort, size: 18),
+                label: Text('ترتيب: ${_sortLabel(_sort)}'),
+              ),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'تصفية حسب البنك',
+              onSelected: (v) => setState(() => _bankFilter = v.isEmpty ? null : v),
+              itemBuilder: (_) {
+                final inUse = banksInUse(store.people);
+                return [
+                  const PopupMenuItem(value: '', child: Text('كل البنوك')),
+                  for (final b in banks)
+                    if (inUse.contains(b.id)) PopupMenuItem(value: b.id, child: Text(b.name)),
+                ];
+              },
+              child: Chip(
+                avatar: const Icon(Icons.filter_list, size: 18),
+                label: Text(_bankFilter == null ? 'كل البنوك' : (bankById(_bankFilter!)?.name ?? _bankFilter!)),
+                onDeleted: _bankFilter == null ? null : () => setState(() => _bankFilter = null),
+              ),
+            ),
+          ]),
+        ),
         Expanded(
           child: ListenableBuilder(
             listenable: store,
             builder: (context, _) {
-              final list = orderPeople(store.people.where(_match));
+              if (_seenRevision != store.revision) {
+                _usage = usageSnapshot(store.people);
+                _seenRevision = store.revision;
+              }
+              final list = sortPeople(store.people.where(_match), _sort, _usage);
               if (list.isEmpty) {
-                return Center(child: Text(store.people.isEmpty ? 'لا يوجد مستفيدون بعد' : 'لا نتائج'));
+                if (store.people.isEmpty) return const Center(child: Text('لا يوجد مستفيدون بعد'));
+                return Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Text('لا نتائج'),
+                    if (_bankFilter != null)
+                      TextButton(
+                        onPressed: () => setState(() => _bankFilter = null),
+                        child: const Text('إزالة تصفية البنك'),
+                      ),
+                  ]),
+                );
               }
               return ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88),
