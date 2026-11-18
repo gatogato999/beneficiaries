@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'bank_badge.dart';
 import 'banks.dart';
 import 'common.dart';
 import 'digits_input.dart';
@@ -73,10 +74,16 @@ class _PersonEditorState extends State<PersonEditor> {
                       initialSelection: r.bankId,
                       expandedInsets: EdgeInsets.zero,
                       label: const Text('البنك / المحفظة'),
+                      leadingIcon: BankBadge(bankId: r.bankId, name: bankById(r.bankId)?.name ?? r.bankId, size: 24),
                       dropdownMenuEntries: [
-                        for (final b in banks) DropdownMenuEntry(value: b.id, label: b.label)
+                        for (final b in banks)
+                          DropdownMenuEntry(
+                            value: b.id,
+                            label: b.label,
+                            leadingIcon: BankBadge(bankId: b.id, name: b.name, size: 24),
+                          ),
                       ],
-                      onSelected: (v) => r.bankId = v ?? r.bankId,
+                      onSelected: (v) => setState(() => r.bankId = v ?? r.bankId),
                     ),
                   ),
                   IconButton(

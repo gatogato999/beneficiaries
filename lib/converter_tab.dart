@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'bank_badge.dart';
 import 'banks.dart';
 import 'common.dart';
 import 'digits.dart';
@@ -47,7 +48,15 @@ class _ConverterTabState extends State<ConverterTab> {
         initialSelection: bank,
         expandedInsets: EdgeInsets.zero,
         label: const Text('البنك / المحفظة'),
-        dropdownMenuEntries: [for (final b in banks) DropdownMenuEntry(value: b, label: b.label)],
+        leadingIcon: BankBadge(bankId: bank.id, name: bank.name, size: 24),
+        dropdownMenuEntries: [
+          for (final b in banks)
+            DropdownMenuEntry(
+              value: b,
+              label: b.label,
+              leadingIcon: BankBadge(bankId: b.id, name: b.name, size: 24),
+            ),
+        ],
         onSelected: (b) {
           setState(() => bank = b ?? bank);
           store.setLastBank(bank.id);

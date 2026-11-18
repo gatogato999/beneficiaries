@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show LicenseEntryWithLineBreaks, LicenseRegistry;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'common.dart';
 import 'converter_tab.dart';
@@ -9,6 +11,12 @@ import 'people_tab.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(
+      ['Noto Sans Arabic (the letters in the bank badges)'],
+      await rootBundle.loadString('assets/fonts/OFL-NotoSansArabic.txt'),
+    );
+  });
   await store.load();
   runApp(const App());
 }

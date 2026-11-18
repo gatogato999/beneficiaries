@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'bank_badge.dart';
 import 'banks.dart';
 import 'common.dart';
 import 'flows.dart';
@@ -81,7 +82,11 @@ class _PeopleTabState extends State<PeopleTab> {
     final bban = bank?.bban(a.number);
     return [
       const Divider(),
-      Text(bank?.label ?? a.bankId, style: Theme.of(context).textTheme.labelLarge),
+      Row(children: [
+        BankBadge(bankId: a.bankId, name: bank?.name ?? a.bankId, size: 24),
+        const SizedBox(width: 8),
+        Expanded(child: Text(bank?.label ?? a.bankId, style: Theme.of(context).textTheme.labelLarge)),
+      ]),
       const SizedBox(height: 2),
       Text(a.number,
           textDirection: TextDirection.ltr,
@@ -221,11 +226,21 @@ class _PeopleTabState extends State<PeopleTab> {
                 return [
                   const PopupMenuItem(value: '', child: Text('كل البنوك')),
                   for (final b in banks)
-                    if (inUse.contains(b.id)) PopupMenuItem(value: b.id, child: Text(b.name)),
+                    if (inUse.contains(b.id))
+                      PopupMenuItem(
+                        value: b.id,
+                        child: Row(children: [
+                          BankBadge(bankId: b.id, name: b.name, size: 22),
+                          const SizedBox(width: 8),
+                          Text(b.name),
+                        ]),
+                      ),
                 ];
               },
               child: Chip(
-                avatar: const Icon(Icons.filter_list, size: 18),
+                avatar: _bankFilter == null
+                    ? const Icon(Icons.filter_list, size: 18)
+                    : BankBadge(bankId: _bankFilter!, name: bankById(_bankFilter!)?.name ?? _bankFilter!, size: 20),
                 label: Text(_bankFilter == null ? 'كل البنوك' : (bankById(_bankFilter!)?.name ?? _bankFilter!)),
                 onDeleted: _bankFilter == null ? null : () => setState(() => _bankFilter = null),
               ),
