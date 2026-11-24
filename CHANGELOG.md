@@ -2,6 +2,7 @@
 Format: [version+build] - date. Keep one entry per release; the build number always increases.
 
 ## [Unreleased]
+- Added: backup reminder. The Other tab shows when you last saved a full backup, and a banner appears after 14 days of unsaved changes ("later" snoozes it for 7 days).
 - Changed: the letter in the bank badges is centred by its real shape and sized to fit, the same on every phone.
 - Added: a coloured round badge with the bank's first letter next to every bank name (no logos).
 - Added: sort the list by name, recently used or most used, and filter it by bank (usage is personal and never shared). Searching an account number now requires a digits-only query.

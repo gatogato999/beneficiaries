@@ -12,7 +12,7 @@ import 'store.dart';
 
 const kMime = 'application/x-sijil+json';
 
-Future<void> sharePeople(List<Person> ps) async {
+Future<void> sharePeople(List<Person> ps, {bool all = false}) async {
   if (ps.isEmpty) return;
   final dir = await getTemporaryDirectory();
   for (final e in dir.listSync()) {
@@ -27,9 +27,11 @@ Future<void> sharePeople(List<Person> ps) async {
       DateTime.now().toIso8601String().substring(0, 16).replaceAll(RegExp(r'[-:T]'), '');
   final f = File('${dir.path}/sijil_$stamp.sijil');
   await f.writeAsString(Store.exportJson(ps), flush: true);
-  await SharePlus.instance.share(
+  final result = await SharePlus.instance.share(
     ShareParams(files: [XFile(f.path, mimeType: kMime)], subject: 'سجل المستفيدين'),
   );
+  // Only "share all" counts as a backup, and only if the share sheet was not simply closed.
+  if (all && result.status != ShareResultStatus.dismissed) await store.markExported();
 }
 
 Widget _block(String title, Person p) => Column(
@@ -106,11 +108,12 @@ Future<void> runImport(String text) async {
   );
 }
 
-Future<void> saveToDevice(List<Person> ps) async {
+Future<void> saveToDevice(List<Person> ps, {bool all = false}) async {
   if (ps.isEmpty) return;
   final stamp =
       DateTime.now().toIso8601String().substring(0, 16).replaceAll(RegExp(r'[-:T]'), '');
   final ok = await NativeFiles.saveText('sijil_$stamp.sijil', Store.exportJson(ps));
+  if (ok && all) await store.markExported();
   final c = navKey.currentContext;
   if (c != null && c.mounted) toast(c, ok ? 'تم حفظ الملف' : 'لم يتم الحفظ');
 }

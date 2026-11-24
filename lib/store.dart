@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'backup_reminder.dart';
 import 'models.dart';
 import 'schema.dart';
 
@@ -29,6 +30,50 @@ class Store extends ChangeNotifier {
     return _save();
   }
 
+  // ---- backup reminder -------------------------------------------------------------------------
+  // `dirtySince`: when the first change after the last full backup was made (cleared by a backup).
+  // Pins, usage counts and sort choices are personal and not part of a backup, so they never count as changes.
+
+  int? _prefMs(String key) => (prefs[key] as num?)?.toInt();
+
+  void _markDirty() {
+    prefs['dirtySince'] ??= _clock().millisecondsSinceEpoch;
+  }
+
+  /// When a full backup (share all or save all) was last made on this phone, or null.
+  DateTime? get lastExport {
+    final ms = _prefMs('lastExport');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  /// True when the "save a backup" banner should be shown now.
+  bool backupDue() => shouldRemindBackup(
+        recordCount: people.length,
+        dirtySinceMs: _prefMs('dirtySince'),
+        snoozeUntilMs: _prefMs('snoozeUntil'),
+        now: _clock(),
+      );
+
+  /// Days since the first change that is not in any backup (0 when there is none).
+  int daysSinceUnsavedChange() {
+    final ms = _prefMs('dirtySince');
+    return ms == null ? 0 : daysBetween(DateTime.fromMillisecondsSinceEpoch(ms), _clock());
+  }
+
+  /// Call after a full backup was made.
+  Future<void> markExported({DateTime? now}) {
+    prefs['lastExport'] = (now ?? _clock()).millisecondsSinceEpoch;
+    prefs.remove('dirtySince');
+    prefs.remove('snoozeUntil');
+    return _save();
+  }
+
+  /// "Later": hides the banner for [kSnoozeDays] days.
+  Future<void> snoozeBackupReminder({DateTime? now}) {
+    prefs['snoozeUntil'] = (now ?? _clock()).add(const Duration(days: kSnoozeDays)).millisecondsSinceEpoch;
+    return _save();
+  }
+
   String? get lastBank => prefs['lastBank'] as String?;
 
   Future<void> setLastBank(String id) {
@@ -40,7 +85,8 @@ class Store extends ChangeNotifier {
 
   /// Folder that holds data.json. Null in the app (the documents folder is used); tests pass a temp folder.
   final Directory? _dir;
-  Store([this._dir]);
+  final DateTime Function() _clock;
+  Store([this._dir, DateTime Function()? clock]) : _clock = clock ?? DateTime.now;
 
   Future<void> load() async {
     final dir = _dir ?? await getApplicationDocumentsDirectory();
@@ -66,6 +112,11 @@ class Store extends ChangeNotifier {
       }
     }
     _sort();
+    if (people.isNotEmpty && prefs['lastExport'] == null && prefs['dirtySince'] == null) {
+      // Records from before the reminder existed: the 14 days start now (and are saved, so they are not restarted).
+      _markDirty();
+      await _save(notify: false);
+    }
   }
 
   /// Copies data.json next to itself; a failing backup must never stop the app from starting.
@@ -115,11 +166,13 @@ class Store extends ChangeNotifier {
     } else {
       people.add(p);
     }
+    _markDirty();
     await _save();
   }
 
   Future<void> delete(String id) async {
     people.removeWhere((p) => p.id == id);
+    _markDirty();
     await _save();
   }
 
@@ -253,6 +306,7 @@ class Store extends ChangeNotifier {
           r.later++;
       }
     }
+    if (r.added + r.merged + r.separate > 0) _markDirty();
     await _save();
     return r;
   }
@@ -266,6 +320,7 @@ class Store extends ChangeNotifier {
       p.incoming.id = newId();
       people.add(p.incoming);
     }
+    if (r == Resolution.merge || r == Resolution.separate) _markDirty();
     await _save();
   }
 

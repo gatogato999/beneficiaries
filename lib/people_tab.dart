@@ -51,6 +51,41 @@ class _PeopleTabState extends State<PeopleTab> {
         SortMode.mostUsed => 'الأكثر استخداماً',
       };
 
+  Widget _backupBanner() {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      color: cs.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Icon(Icons.backup_outlined, color: cs.onSecondaryContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'لم تحفظ نسخة احتياطية من سجلاتك منذ ${store.daysSinceUnsavedChange()} يوماً. '
+                'سجلاتك موجودة على هذا الهاتف فقط.',
+                style: TextStyle(color: cs.onSecondaryContainer),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Wrap(spacing: 8, children: [
+              TextButton(onPressed: () => store.snoozeBackupReminder(), child: const Text('لاحقاً')),
+              FilledButton(
+                onPressed: () => saveToDevice(List.of(store.people), all: true),
+                child: const Text('حفظ نسخة الآن'),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
+
   void _edit([Person? p]) =>
       Navigator.push(context, MaterialPageRoute(builder: (_) => PersonEditor(person: p)));
 
@@ -183,6 +218,10 @@ class _PeopleTabState extends State<PeopleTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(children: [
+        ListenableBuilder(
+          listenable: store,
+          builder: (context, _) => store.backupDue() ? _backupBanner() : const SizedBox.shrink(),
+        ),
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(

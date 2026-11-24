@@ -5,6 +5,7 @@ import 'common.dart';
 import 'flows.dart';
 import 'models.dart';
 import 'about_page.dart';
+import 'backup_reminder.dart';
 import 'native_files.dart';
 
 class OtherTab extends StatelessWidget {
@@ -78,16 +79,21 @@ class OtherTab extends StatelessWidget {
                 subtitle: Text('شارك سجلاتك مع الآخرين أو استورد سجلاتهم'),
               ),
               ListTile(
+                leading: const Icon(Icons.history),
+                title: const Text('آخر نسخة احتياطية'),
+                subtitle: Text(describeLastExport(store.lastExport, DateTime.now())),
+              ),
+              ListTile(
                 leading: const Icon(Icons.ios_share),
                 title: const Text('مشاركة كل السجلات'),
                 enabled: !empty,
-                onTap: () => sharePeople(List.of(store.people)),
+                onTap: () => sharePeople(List.of(store.people), all: true),
               ),
               ListTile(
                 leading: const Icon(Icons.save_alt),
                 title: const Text('حفظ كل السجلات في الجهاز'),
                 enabled: !empty,
-                onTap: () => saveToDevice(List.of(store.people)),
+                onTap: () => saveToDevice(List.of(store.people), all: true),
               ),
               ListTile(
                 leading: const Icon(Icons.checklist),
